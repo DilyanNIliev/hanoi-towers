@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кулата на Ханой</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root{
+    --wood-dark:#1c130d;
+    --wood-mid:#2c1d13;
+    --wood-plank:#3a2717;
+    --brass:#c9a227;
+    --brass-bright:#e8c04a;
+    --incense:#9a3324;
+    --jade:#3f5d52;
+    --parchment:#e9dcc3;
+    --parchment-dim:#bfae8c;
+  }
+
+  *{box-sizing:border-box;}
+
+  html,body{
+    margin:0;
+    height:100%;
+    background:
+      radial-gradient(ellipse at 50% 0%, #241811 0%, var(--wood-dark) 55%, #100b07 100%);
+    font-family:'Cormorant Garamond',serif;
+    color:var(--parchment);
+    overflow-x:hidden;
+  }
+
+  .stage{
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:24px 16px 40px;
+  }
+
+  .eyebrow{
+    letter-spacing:0.35em;
+    text-transform:uppercase;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--brass);
+    opacity:0.85;
+    margin-bottom:6px;
+  }
+
+  h1{
+    font-size:clamp(26px,5vw,40px);
+    font-weight:700;
+    margin:0 0 4px;
+    color:var(--parchment);
+    text-shadow:0 0 24px rgba(201,162,39,0.25);
+    letter-spacing:0.01em;
+  }
+
+  .subtitle{
+    font-style:italic;
+    color:var(--parchment-dim);
+    font-size:16px;
+    max-width:520px;
+    text-align:center;
+    margin:0 0 20px;
+    line-height:1.5;
+  }
+
+  .panel{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:18px;
+  }
+
+  .stat{
+    font-family:'JetBrains Mono',monospace;
+    background:linear-gradient(180deg, rgba(201,162,39,0.1), rgba(201,162,39,0.04));
+    border:1px solid rgba(201,162,39,0.35);
+    border-radius:3px;
+    padding:8px 16px;
+    font-size:13px;
+    color:var(--parchment);
+    display:flex;
+    gap:8px;
+    align-items:baseline;
+  }
+  .stat b{color:var(--brass-bright);font-size:16px;}
+
+  select, button{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    background:linear-gradient(180deg,#3a2717,#2c1d13);
+    color:var(--parchment);
+    border:1px solid rgba(201,162,39,0.4);
+    border-radius:3px;
+    padding:8px 14px;
+    cursor:pointer;
+    transition:border-color .2s, box-shadow .2s, transform .05s;
+  }
+  select:hover, button:hover{
+    border-color:var(--brass-bright);
+    box-shadow:0 0 14px rgba(201,162,39,0.25);
+  }
+  button:active{transform:translateY(1px);}
+  button.primary{
+    background:linear-gradient(180deg,var(--incense),#742418);
+    border-color:#c96448;
+  }
+  button.primary:hover{box-shadow:0 0 14px rgba(154,51,36,0.45);}
+
+  .temple{
+    position:relative;
+    width:min(720px,94vw);
+    margin-top:4px;
+  }
+
+  .board{
+    position:relative;
+    display:flex;
+    justify-content:space-around;
+    align-items:flex-end;
+    height:260px;
+    padding:0 20px;
+    background:
+      linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.25) 100%),
+      repeating-linear-gradient(90deg, #3a2717 0 3px, #33210f 3px 6px);
+    border-radius:6px;
+    border:1px solid rgba(201,162,39,0.25);
+    box-shadow:
+      inset 0 3px 18px rgba(0,0,0,0.55),
+      0 20px 40px rgba(0,0,0,0.5);
+  }
+
+  .peg-wrap{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-end;
+    height:100%;
+    width:33%;
+    cursor:pointer;
+  }
+
+  .peg{
+    position:absolute;
+    bottom:14px;
+    width:12px;
+    height:230px;
+    background:linear-gradient(90deg,#a5811f,var(--brass-bright) 40%,#8a6c1c);
+    border-radius:6px 6px 2px 2px;
+    box-shadow:0 0 10px rgba(201,162,39,0.35);
+    z-index:1;
+  }
+  .peg::after{
+    content:'';
+    position:absolute;
+    top:-8px;left:50%;
+    transform:translateX(-50%);
+    width:22px;height:14px;
+    background:radial-gradient(circle at 35% 30%, var(--brass-bright), var(--brass) 60%, #7a5f18);
+    border-radius:50%;
+  }
+
+  .base{
+    position:absolute;
+    bottom:0;
+    width:88%;
+    height:16px;
+    background:linear-gradient(180deg,#4a3018,#241609);
+    border-radius:4px;
+    border:1px solid rgba(201,162,39,0.3);
+    z-index:2;
+  }
+
+  .disc-stack{
+    position:relative;
+    z-index:3;
+    display:flex;
+    flex-direction:column-reverse;
+    align-items:center;
+    gap:3px;
+    padding-bottom:16px;
+    width:100%;
+  }
+
+  .disc{
+    height:22px;
+    border-radius:5px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    font-weight:700;
+    color:rgba(0,0,0,0.55);
+    box-shadow:
+      inset 0 3px 4px rgba(255,255,255,0.25),
+      inset 0 -4px 6px rgba(0,0,0,0.3),
+      0 3px 6px rgba(0,0,0,0.45);
+    transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+    user-select:none;
+  }
+
+  .peg-wrap.selected .disc:last-child{
+    transform:translateY(-14px);
+    box-shadow:
+      inset 0 3px 4px rgba(255,255,255,0.3),
+      inset 0 -4px 6px rgba(0,0,0,0.3),
+      0 0 18px rgba(232,192,74,0.7);
+    filter:brightness(1.15);
+  }
+
+  .peg-wrap.hint{
+    background:radial-gradient(ellipse at 50% 100%, rgba(232,192,74,0.12), transparent 70%);
+  }
+
+  .peg-label{
+    position:absolute;
+    bottom:-30px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.15em;
+    color:var(--parchment-dim);
+    text-transform:uppercase;
+  }
+
+  .footer-hint{
+    margin-top:14px;
+    font-size:13px;
+    color:var(--parchment-dim);
+    text-align:center;
+    max-width:480px;
+    line-height:1.5;
+  }
+  .footer-hint kbd{
+    font-family:'JetBrains Mono',monospace;
+    background:rgba(201,162,39,0.12);
+    border:1px solid rgba(201,162,39,0.3);
+    padding:1px 6px;
+    border-radius:3px;
+    font-size:12px;
+  }
+
+  .win-banner{
+    position:fixed;
+    inset:0;
+    background:rgba(10,7,4,0.82);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+    backdrop-filter:blur(3px);
+  }
+  .win-banner.show{display:flex;}
+  .win-card{
+    text-align:center;
+    padding:40px 48px;
+    border:1px solid rgba(201,162,39,0.5);
+    border-radius:8px;
+    background:linear-gradient(180deg,#241811,#150e08);
+    box-shadow:0 0 60px rgba(201,162,39,0.25);
+    max-width:440px;
+  }
+  .win-card h2{
+    font-size:34px;
+    margin:0 0 10px;
+    color:var(--brass-bright);
+  }
+  .win-card p{
+    color:var(--parchment-dim);
+    font-size:16px;
+    line-height:1.5;
+    margin:0 0 22px;
+  }
+
+  .solve-box{
+    width:min(640px,94vw);
+    margin-bottom:22px;
+    border:1px solid rgba(201,162,39,0.3);
+    border-radius:6px;
+    background:linear-gradient(180deg, rgba(58,39,23,0.4), rgba(28,19,13,0.6));
+    padding:16px 20px;
+  }
+  .solve-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .solve-sub{
+    font-size:13px;
+    color:var(--parchment-dim);
+    font-style:italic;
+  }
+  .solve-controls{display:flex;gap:8px;flex-wrap:wrap;}
+
+  .current-move{
+    font-family:'JetBrains Mono',monospace;
+    font-size:16px;
+    text-align:center;
+    padding:14px 10px;
+    border-radius:4px;
+    background:rgba(201,162,39,0.08);
+    border:1px dashed rgba(201,162,39,0.35);
+    color:var(--brass-bright);
+    min-height:22px;
+  }
+  .current-move .cm-empty{
+    font-size:13px;
+    font-style:italic;
+    color:var(--parchment-dim);
+  }
+  .current-move .cm-num{color:var(--parchment-dim);margin-right:8px;}
+  .current-move .cm-done{color:var(--jade);}
+
+  .log-details{margin-top:10px;}
+  .log-details summary{
+    cursor:pointer;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--parchment-dim);
+    letter-spacing:0.03em;
+  }
+  .log-details summary:hover{color:var(--brass);}
+  .solve-log{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    max-height:160px;
+    overflow-y:auto;
+    border-top:1px solid rgba(201,162,39,0.2);
+    padding-top:10px;
+    margin-top:10px;
+  }
+  .solve-log-empty{
+    color:var(--parchment-dim);
+    font-style:italic;
+    font-size:13px;
+  }
+  .solve-log-row{
+    display:flex;
+    gap:10px;
+    padding:4px 6px;
+    border-radius:3px;
+    color:var(--parchment-dim);
+  }
+  .solve-log-row .idx{color:var(--brass);width:34px;flex-shrink:0;}
+  .solve-log-row.done{color:var(--parchment-dim);opacity:0.45;}
+  .solve-log-row.current{
+    background:rgba(201,162,39,0.14);
+    color:var(--brass-bright);
+  }
+  .solve-log-row.current .idx{color:var(--brass-bright);}
+
+  .guide{
+    width:min(640px,94vw);
+    margin-top:18px;
+    border:1px solid rgba(201,162,39,0.25);
+    border-radius:6px;
+    background:rgba(28,19,13,0.4);
+    padding:4px 20px;
+  }
+  .guide summary{
+    cursor:pointer;
+    padding:14px 0;
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    letter-spacing:0.03em;
+    color:var(--brass);
+  }
+  .guide summary:hover{color:var(--brass-bright);}
+  .guide-body{
+    padding-bottom:18px;
+    font-size:15px;
+    line-height:1.65;
+    color:var(--parchment-dim);
+  }
+  .guide-body code{
+    font-family:'JetBrains Mono',monospace;
+    background:rgba(201,162,39,0.12);
+    padding:1px 6px;
+    border-radius:3px;
+    color:var(--brass-bright);
+    font-size:13px;
+  }
+  .guide-body ol{padding-left:20px;}
+  .guide-body li{margin-bottom:8px;}
+  .guide-body b{color:var(--parchment);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="eyebrow">Легендата на монасите</div>
+  <h1>Кулата на Ханой</h1>
+  <p class="subtitle">Премести цялата кула от първия на третия стълб. Може да местиш само по един диск, и никога по-голям върху по-малък.</p>
+
+  <div class="panel">
+    <div class="stat">Ходове <b id="moveCount">0</b></div>
+    <div class="stat">Минимум <b id="minMoves">7</b></div>
+    <label class="stat" style="gap:6px;">
+      Дискове
+      <select id="discSelect"></select>
+    </label>
+    <button id="resetBtn">↺ Начало</button>
+    <button id="undoBtn">← Назад</button>
+  </div>
+
+  <div class="solve-box">
+    <div class="solve-head">
+      <div>
+        <div class="eyebrow" style="margin-bottom:2px;">Оракулът на монасите</div>
+        <div class="solve-sub">Показва оптималното решение стъпка по стъпка</div>
+      </div>
+      <div class="solve-controls">
+        <button id="solveBtn">▶ Реши автоматично</button>
+        <button id="stepBtn">Стъпка по стъпка</button>
+        <button id="stopSolveBtn" style="display:none;">■ Спри</button>
+      </div>
+    </div>
+    <div class="current-move" id="currentMove">
+      <span class="cm-empty">Натисни "Реши автоматично" или "Стъпка по стъпка", за да видиш ходовете тук</span>
+    </div>
+    <details class="log-details">
+      <summary>Пълен списък на ходовете</summary>
+      <div class="solve-log" id="solveLog">
+        <div class="solve-log-empty">Тук ще се появи списъкът с ходове: "Диск N: Кол X → Кол Y"</div>
+      </div>
+    </details>
+  </div>
+
+  <div class="temple">
+    <div class="board" id="board"></div>
+  </div>
+
+  <p class="footer-hint">Кликни върху стълб, за да вдигнеш горния диск, после кликни върху друг стълб, за да го поставиш. Можеш и да плъзгаш дисковете директно. <kbd>↺</kbd> връща играта в начало.</p>
+
+  <details class="guide">
+    <summary>Как се решава с минимален брой ходове — обяснение</summary>
+    <div class="guide-body">
+      <p><b>Формула:</b> за <code>n</code> диска минималният брой ходове е <code>2ⁿ − 1</code>. За 6 диска това са 63 хода.</p>
+      <p><b>Идеята (рекурсия):</b> за да преместиш кула от <code>n</code> диска от изходен кол <b>A</b> на целеви кол <b>C</b>, използвайки помощен кол <b>B</b>:</p>
+      <ol>
+        <li>Премести горните <code>n−1</code> диска от <b>A</b> на <b>B</b> (използвайки <b>C</b> като помощен) — приложи същия метод рекурсивно.</li>
+        <li>Премести най-големия, останал диск от <b>A</b> направо на <b>C</b>.</li>
+        <li>Премести <code>n−1</code>-те диска от <b>B</b> на <b>C</b> (използвайки вече празния <b>A</b> като помощен), пак рекурсивно.</li>
+      </ol>
+      <p>Базовият случай е един диск: просто го местиш директно от неговия кол на целевия.</p>
+      <p><b>Практическо правило</b> (работи без да пресмяташ рекурсия наум): ако броят дискове <code>n</code> е четен, първият ход е винаги към <i>помощния</i> кол; ако <code>n</code> е нечетен, първият ход е винаги към <i>целевия</i> кол. След това на всеки следващ ход или местиш най-малкия диск (винаги по кръг в една и съща посока), или правиш единствения възможен ход с друг диск, който не включва най-малкия. Редувайки тези две действия, се стига автоматично до решението.</p>
+    </div>
+  </details>
+</div>
+
+<div class="win-banner" id="winBanner">
+  <div class="win-card">
+    <h2>Кулата е преместена</h2>
+    <p id="winText"></p>
+    <button class="primary" id="playAgainBtn">Играй отново</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const board = document.getElementById('board');
+  const moveCountEl = document.getElementById('moveCount');
+  const minMovesEl = document.getElementById('minMoves');
+  const discSelect = document.getElementById('discSelect');
+  const resetBtn = document.getElementById('resetBtn');
+  const undoBtn = document.getElementById('undoBtn');
+  const winBanner = document.getElementById('winBanner');
+  const winText = document.getElementById('winText');
+  const playAgainBtn = document.getElementById('playAgainBtn');
+
+  const discColors = [
+    '#9a3324', '#c9622f', '#c9a227', '#e8c04a',
+    '#8a9a5b', '#3f5d52', '#2f6d6d', '#4a5a8a'
+  ];
+
+  let numDiscs = 6;
+  let pegs = [[], [], []];
+  let selectedPeg = null;
+  let moveCount = 0;
+  let history = [];
+
+  for(let i=3;i<=8;i++){
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = i + ' диска';
+    if(i===6) opt.selected = true;
+    discSelect.appendChild(opt);
+  }
+
+  function init(n){
+    numDiscs = n;
+    pegs = [[], [], []];
+    for(let i=n;i>=1;i--) pegs[0].push(i);
+    moveCount = 0;
+    history = [];
+    selectedPeg = null;
+    moveCountEl.textContent = '0';
+    minMovesEl.textContent = String(Math.pow(2,n)-1);
+    winBanner.classList.remove('show');
+    render();
+  }
+
+  function render(){
+    board.innerHTML = '';
+    const labels = ['I','II','III'];
+    pegs.forEach((stack, idx) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'peg-wrap' + (selectedPeg===idx ? ' selected':'');
+      wrap.dataset.peg = idx;
+
+      const base = document.createElement('div');
+      base.className = 'base';
+      wrap.appendChild(base);
+
+      const peg = document.createElement('div');
+      peg.className = 'peg';
+      wrap.appendChild(peg);
+
+      const discStack = document.createElement('div');
+      discStack.className = 'disc-stack';
+      stack.forEach(size => {
+        const d = document.createElement('div');
+        d.className = 'disc';
+        const widthPct = 28 + (size/numDiscs)*62;
+        d.style.width = widthPct + '%';
+        d.style.background = `linear-gradient(180deg, ${discColors[(size-1)%discColors.length]}, ${shade(discColors[(size-1)%discColors.length],-18)})`;
+        d.textContent = size;
+        d.draggable = true;
+        d.addEventListener('dragstart', (e)=>{
+          if(stack[stack.length-1] !== size) { e.preventDefault(); return; }
+          e.dataTransfer.setData('text/plain', String(idx));
+          selectedPeg = idx;
+          render();
+        });
+        discStack.appendChild(d);
+      });
+      wrap.appendChild(discStack);
+
+      const label = document.createElement('div');
+      label.className = 'peg-label';
+      label.textContent = labels[idx];
+      wrap.appendChild(label);
+
+      wrap.addEventListener('click', ()=> handlePegClick(idx));
+      wrap.addEventListener('dragover', (e)=> e.preventDefault());
+      wrap.addEventListener('drop', (e)=>{
+        e.preventDefault();
+        const from = Number(e.dataTransfer.getData('text/plain'));
+        attemptMove(from, idx);
+      });
+
+      board.appendChild(wrap);
+    });
+  }
+
+  function shade(hex, pct){
+    const num = parseInt(hex.slice(1),16);
+    let r = (num>>16) + Math.round(255*(pct/100));
+    let g = ((num>>8)&0xff) + Math.round(255*(pct/100));
+    let b = (num&0xff) + Math.round(255*(pct/100));
+    r=Math.max(0,Math.min(255,r)); g=Math.max(0,Math.min(255,g)); b=Math.max(0,Math.min(255,b));
+    return '#'+(r<<16|g<<8|b).toString(16).padStart(6,'0');
+  }
+
+  function handlePegClick(idx){
+    if(selectedPeg === null){
+      if(pegs[idx].length === 0) return;
+      selectedPeg = idx;
+      render();
+    } else if(selectedPeg === idx){
+      selectedPeg = null;
+      render();
+    } else {
+      attemptMove(selectedPeg, idx);
+    }
+  }
+
+  function attemptMove(from, to){
+    selectedPeg = null;
+    if(from === to || pegs[from].length === 0){ render(); return; }
+    const disc = pegs[from][pegs[from].length-1];
+    const target = pegs[to];
+    if(target.length > 0 && target[target.length-1] < disc){
+      render();
+      return;
+    }
+    pegs[from].pop();
+    pegs[to].push(disc);
+    history.push([from, to]);
+    moveCount++;
+    moveCountEl.textContent = String(moveCount);
+
+    const expected = solutionMoves[solutionCursor];
+    const matchesPlan = expected && expected.from === from && expected.to === to;
+    if(!matchesPlan && solutionMoves.length > 0){
+      stopAutoPlay();
+      solutionMoves = [];
+      solutionCursor = 0;
+      renderLog();
+      renderCurrentMove();
+    }
+
+    render();
+    checkWin();
+  }
+
+  function checkWin(){
+    if(pegs[2].length === numDiscs){
+      const min = Math.pow(2,numDiscs)-1;
+      const perfect = moveCount === min;
+      winText.textContent = perfect
+        ? `Съвършено. Направи го точно за минималните ${min} хода.`
+        : `Успя за ${moveCount} хода (минимумът е ${min}).`;
+      setTimeout(()=> winBanner.classList.add('show'), 300);
+    }
+  }
+
+  // --- Solver: generates the optimal move sequence ---
+  const solveBtn = document.getElementById('solveBtn');
+  const stepBtn = document.getElementById('stepBtn');
+  const stopSolveBtn = document.getElementById('stopSolveBtn');
+  const solveLog = document.getElementById('solveLog');
+  const currentMoveEl = document.getElementById('currentMove');
+  const pegLabels = ['I','II','III'];
+
+  let solutionMoves = [];
+  let solutionCursor = 0;
+  let autoPlayTimer = null;
+
+  function generateSolution(n, from, aux, to, moves){
+    if(n === 0) return;
+    generateSolution(n-1, from, to, aux, moves);
+    moves.push({disc:n, from, to});
+    generateSolution(n-1, aux, from, to, moves);
+  }
+
+  function buildSolutionFromScratch(){
+    solutionMoves = [];
+    generateSolution(numDiscs, 0, 1, 2, solutionMoves);
+    solutionCursor = 0;
+    renderLog();
+    renderCurrentMove();
+  }
+
+  function renderCurrentMove(){
+    if(solutionMoves.length === 0){
+      currentMoveEl.innerHTML = '<span class="cm-empty">Натисни "Реши автоматично" или "Стъпка по стъпка", за да видиш ходовете тук</span>';
+      return;
+    }
+    if(solutionCursor >= solutionMoves.length){
+      currentMoveEl.innerHTML = `<span class="cm-done">Готово — всички ${solutionMoves.length} хода са изпълнени ✓</span>`;
+      return;
+    }
+    const m = solutionMoves[solutionCursor];
+    currentMoveEl.innerHTML = `<span class="cm-num">Ход ${solutionCursor+1}/${solutionMoves.length}</span>Диск ${m.disc}: Кол ${pegLabels[m.from]} → Кол ${pegLabels[m.to]}`;
+  }
+
+  function renderLog(){
+    if(solutionMoves.length === 0){
+      solveLog.innerHTML = '<div class="solve-log-empty">Тук ще се появи списъкът с ходове: "Диск N: Кол X → Кол Y"</div>';
+      return;
+    }
+    solveLog.innerHTML = '';
+    solutionMoves.forEach((m, i)=>{
+      const row = document.createElement('div');
+      row.className = 'solve-log-row' + (i < solutionCursor ? ' done' : '') + (i === solutionCursor ? ' current' : '');
+      row.innerHTML = `<span class="idx">${i+1}.</span><span>Диск ${m.disc}: Кол ${pegLabels[m.from]} → Кол ${pegLabels[m.to]}</span>`;
+      solveLog.appendChild(row);
+    });
+    const current = solveLog.querySelector('.current');
+    if(current) current.scrollIntoView({block:'nearest'});
+  }
+
+  function applyNextSolutionMove(){
+    if(solutionCursor >= solutionMoves.length) return false;
+    const m = solutionMoves[solutionCursor];
+    attemptMove(m.from, m.to);
+    solutionCursor++;
+    renderLog();
+    renderCurrentMove();
+    return true;
+  }
+
+  function resetSolverIfBoardChanged(){
+    // if the board doesn't match where the solver expects it, rebuild the plan from current state
+    solutionMoves = [];
+    solutionCursor = 0;
+  }
+
+  stepBtn.addEventListener('click', ()=>{
+    if(solutionMoves.length === 0 || solutionCursor >= solutionMoves.length){
+      buildSolutionFromScratch();
+    }
+    applyNextSolutionMove();
+  });
+
+  solveBtn.addEventListener('click', ()=>{
+    buildSolutionFromScratch();
+    solveBtn.style.display = 'none';
+    stepBtn.style.display = 'none';
+    stopSolveBtn.style.display = '';
+    autoPlayTimer = setInterval(()=>{
+      const moved = applyNextSolutionMove();
+      if(!moved){
+        stopAutoPlay();
+      }
+    }, 550);
+  });
+
+  function stopAutoPlay(){
+    if(autoPlayTimer){ clearInterval(autoPlayTimer); autoPlayTimer = null; }
+    solveBtn.style.display = '';
+    stepBtn.style.display = '';
+    stopSolveBtn.style.display = 'none';
+  }
+
+  stopSolveBtn.addEventListener('click', stopAutoPlay);
+
+  undoBtn.addEventListener('click', ()=>{
+    if(history.length === 0) return;
+    const [from, to] = history.pop();
+    const disc = pegs[to].pop();
+    pegs[from].push(disc);
+    moveCount = Math.max(0, moveCount - 1);
+    moveCountEl.textContent = String(moveCount);
+    selectedPeg = null;
+    winBanner.classList.remove('show');
+    stopAutoPlay();
+    resetSolverIfBoardChanged();
+    renderLog();
+    renderCurrentMove();
+    render();
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    stopAutoPlay();
+    resetSolverIfBoardChanged();
+    init(numDiscs);
+    renderLog();
+    renderCurrentMove();
+  });
+  playAgainBtn.addEventListener('click', ()=>{
+    stopAutoPlay();
+    resetSolverIfBoardChanged();
+    init(numDiscs);
+    renderLog();
+    renderCurrentMove();
+  });
+  discSelect.addEventListener('change', (e)=>{
+    stopAutoPlay();
+    resetSolverIfBoardChanged();
+    init(Number(e.target.value));
+    renderLog();
+    renderCurrentMove();
+  });
+
+  init(numDiscs);
+})();
+</script>
+
+</body>
+</html>
